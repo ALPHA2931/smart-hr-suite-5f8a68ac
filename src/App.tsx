@@ -11,6 +11,10 @@ import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
 import Employees from "./pages/admin/Employees";
 import Attendance from "./pages/admin/Attendance";
 import LeaveRequests from "./pages/admin/LeaveRequests";
+import Payroll from "./pages/admin/Payroll";
+import EmployeeAttendance from "./pages/employee/EmployeeAttendance";
+import EmployeeLeaves from "./pages/employee/EmployeeLeaves";
+import EmployeeSalary from "./pages/employee/EmployeeSalary";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,7 +33,11 @@ const App = () => (
             <Route path="/admin/employees" element={<Employees />} />
             <Route path="/admin/attendance" element={<Attendance />} />
             <Route path="/admin/leaves" element={<LeaveRequests />} />
+            <Route path="/admin/payroll" element={<Payroll />} />
             <Route path="/employee" element={<EmployeeDashboard />} />
+            <Route path="/employee/attendance" element={<EmployeeAttendance />} />
+            <Route path="/employee/leaves" element={<EmployeeLeaves />} />
+            <Route path="/employee/salary" element={<EmployeeSalary />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
