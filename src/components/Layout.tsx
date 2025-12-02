@@ -1,4 +1,3 @@
-// Layout Component - Main app layout with sidebar navigation
 import { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,7 +46,7 @@ export function Layout({ children }: LayoutProps) {
             </div>
             <div>
               <h1 className="text-lg font-bold text-sidebar-foreground">HR System</h1>
-              <p className="text-xs text-sidebar-foreground/60 capitalize font-medium">{userRole} • Prototype</p>
+              <p className="text-xs text-sidebar-foreground/60 capitalize font-medium">{userRole}</p>
             </div>
           </div>
 

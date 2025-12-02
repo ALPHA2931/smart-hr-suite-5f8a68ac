@@ -1,6 +1,4 @@
-// Employee Leaves - Prototype with Mock Data
-import { useState } from 'react';
-import { Layout } from '@/components/layout/Layout';
+import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,17 +19,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { mockLeaveRequests } from '@/data/mock';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/hooks/use-toast';
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { Plus } from 'lucide-react';
 
 export default function EmployeeLeaves() {
-  const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [leaveRequests, setLeaveRequests] = useState(
-    mockLeaveRequests.filter((r) => r.employee_id === '1')
-  );
   const [formData, setFormData] = useState({
     leave_type: '',
     start_date: '',
@@ -39,30 +38,52 @@ export default function EmployeeLeaves() {
     reason: '',
   });
 
-  const handleSubmit = () => {
-    if (!formData.leave_type || !formData.start_date || !formData.end_date || !formData.reason) {
-      toast({ title: 'Please fill all fields', variant: 'destructive' });
-      return;
-    }
+  const { data: employee } = useQuery({
+    queryKey: ['employee', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
 
-    const newRequest = {
-      id: `leave-new-${Date.now()}`,
-      employee_id: '1',
-      leave_type: formData.leave_type,
-      start_date: formData.start_date,
-      end_date: formData.end_date,
-      reason: formData.reason,
-      status: 'pending' as const,
-      admin_notes: null,
-      created_at: new Date().toISOString(),
-      employees: mockLeaveRequests[0].employees,
-    };
+  const { data: leaveRequests } = useQuery({
+    queryKey: ['leave_requests', employee?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('leave_requests')
+        .select('*')
+        .eq('employee_id', employee?.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!employee,
+  });
 
-    setLeaveRequests([newRequest, ...leaveRequests]);
-    toast({ title: 'Leave request submitted successfully' });
-    setOpen(false);
-    setFormData({ leave_type: '', start_date: '', end_date: '', reason: '' });
-  };
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from('leave_requests').insert({
+        employee_id: employee!.id,
+        ...formData,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leave_requests'] });
+      toast({ title: 'Leave request submitted successfully' });
+      setOpen(false);
+      setFormData({ leave_type: '', start_date: '', end_date: '', reason: '' });
+    },
+    onError: () => {
+      toast({ title: 'Failed to submit leave request', variant: 'destructive' });
+    },
+  });
 
   return (
     <Layout>
@@ -89,7 +110,9 @@ export default function EmployeeLeaves() {
                   <Label htmlFor="leave_type">Leave Type</Label>
                   <Select
                     value={formData.leave_type}
-                    onValueChange={(value) => setFormData({ ...formData, leave_type: value })}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, leave_type: value })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
@@ -108,7 +131,9 @@ export default function EmployeeLeaves() {
                     id="start_date"
                     type="date"
                     value={formData.start_date}
-                    onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, start_date: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -117,7 +142,9 @@ export default function EmployeeLeaves() {
                     id="end_date"
                     type="date"
                     value={formData.end_date}
-                    onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, end_date: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -125,11 +152,17 @@ export default function EmployeeLeaves() {
                   <Textarea
                     id="reason"
                     value={formData.reason}
-                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, reason: e.target.value })
+                    }
                     placeholder="Enter reason for leave"
                   />
                 </div>
-                <Button onClick={handleSubmit} className="w-full">
+                <Button
+                  onClick={() => createMutation.mutate()}
+                  disabled={createMutation.isPending}
+                  className="w-full"
+                >
                   Submit Request
                 </Button>
               </div>
@@ -144,7 +177,7 @@ export default function EmployeeLeaves() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {leaveRequests.map((request) => (
+              {leaveRequests?.map((request) => (
                 <div
                   key={request.id}
                   className="flex items-center justify-between border-b pb-4 last:border-0"
@@ -170,7 +203,7 @@ export default function EmployeeLeaves() {
                   </div>
                 </div>
               ))}
-              {!leaveRequests.length && (
+              {!leaveRequests?.length && (
                 <p className="text-center text-muted-foreground py-8">No leave requests yet</p>
               )}
             </div>
