@@ -1,40 +1,13 @@
-import { Layout } from '@/components/Layout';
+// Employee Salary - Prototype with Mock Data
+import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { mockEmployees } from '@/data/mock';
 import { DollarSign, Calendar, TrendingUp } from 'lucide-react';
 
 export default function EmployeeSalary() {
-  const { user } = useAuth();
-
-  const { data: employee } = useQuery({
-    queryKey: ['employee', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('employees')
-        .select('*, departments(name)')
-        .eq('user_id', user?.id)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user,
-  });
-
-  const { data: profile } = useQuery({
-    queryKey: ['profile', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user?.id)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user,
-  });
+  // Use first employee as current user for prototype
+  const employee = mockEmployees[0];
+  const profile = employee.profiles;
 
   const monthlySalary = employee?.salary || 0;
   const annualSalary = monthlySalary * 12;
@@ -54,9 +27,7 @@ export default function EmployeeSalary() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                ${monthlySalary.toLocaleString()}
-              </div>
+              <div className="text-2xl font-bold">${monthlySalary.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">Per month</p>
             </CardContent>
           </Card>
@@ -67,9 +38,7 @@ export default function EmployeeSalary() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                ${annualSalary.toLocaleString()}
-              </div>
+              <div className="text-2xl font-bold">${annualSalary.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">Per year</p>
             </CardContent>
           </Card>

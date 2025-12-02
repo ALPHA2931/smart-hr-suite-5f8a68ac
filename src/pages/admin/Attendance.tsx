@@ -1,36 +1,14 @@
-import { useEffect, useState } from 'react';
-import { Layout } from '@/components/Layout';
+// Attendance Management - Prototype with Mock Data
+import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
+import { mockAttendance } from '@/data/mock';
 import { Calendar, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Attendance() {
-  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const today = new Date().toISOString().split('T')[0];
-
-  useEffect(() => {
-    fetchTodayAttendance();
-  }, []);
-
-  const fetchTodayAttendance = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('attendance')
-        .select('*, employees(employee_id, position, profiles(full_name))')
-        .eq('date', today)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setAttendanceRecords(data || []);
-    } catch (error) {
-      console.error('Error fetching attendance:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { toast } = useToast();
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -57,6 +35,10 @@ export default function Attendance() {
     return <Badge className={variants[status]}>{status.replace('_', ' ')}</Badge>;
   };
 
+  const handleMarkAttendance = () => {
+    toast({ title: 'Prototype Demo', description: 'Attendance marking form would open here.' });
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -65,7 +47,7 @@ export default function Attendance() {
             <h1 className="text-4xl font-bold tracking-tight">Attendance Management</h1>
             <p className="text-muted-foreground mt-2">Track daily employee attendance</p>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={handleMarkAttendance}>
             <Calendar className="h-4 w-4" />
             Mark Attendance
           </Button>
@@ -76,15 +58,13 @@ export default function Attendance() {
             <CardTitle>Today's Attendance - {new Date().toLocaleDateString()}</CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : attendanceRecords.length === 0 ? (
+            {mockAttendance.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No attendance records for today yet.
               </div>
             ) : (
               <div className="space-y-4">
-                {attendanceRecords.map((record) => (
+                {mockAttendance.map((record) => (
                   <div
                     key={record.id}
                     className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"

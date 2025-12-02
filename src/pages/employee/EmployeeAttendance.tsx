@@ -1,94 +1,32 @@
-import { Layout } from '@/components/Layout';
+// Employee Attendance - Prototype with Mock Data
+import { useState } from 'react';
+import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { generateEmployeeAttendance } from '@/data/mock';
 import { format } from 'date-fns';
 import { Clock, CheckCircle2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function EmployeeAttendance() {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [attendance, setAttendance] = useState(generateEmployeeAttendance('1'));
+  const [checkedIn, setCheckedIn] = useState(false);
+  const [checkInTime, setCheckInTime] = useState<string | null>(null);
 
-  const { data: employee } = useQuery({
-    queryKey: ['employee', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('user_id', user?.id)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user,
-  });
+  const handleCheckIn = () => {
+    const now = format(new Date(), 'HH:mm:ss');
+    setCheckInTime(now);
+    setCheckedIn(true);
+    toast({ title: 'Checked in successfully', description: `Check-in time: ${now}` });
+  };
 
-  const { data: attendance } = useQuery({
-    queryKey: ['attendance', employee?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('attendance')
-        .select('*')
-        .eq('employee_id', employee?.id)
-        .order('date', { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!employee,
-  });
-
-  const checkInMutation = useMutation({
-    mutationFn: async () => {
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const now = format(new Date(), 'HH:mm:ss');
-
-      const { error } = await supabase.from('attendance').insert({
-        employee_id: employee!.id,
-        date: today,
-        check_in_time: now,
-        status: 'present',
-      });
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['attendance'] });
-      toast({ title: 'Checked in successfully' });
-    },
-    onError: () => {
-      toast({ title: 'Failed to check in', variant: 'destructive' });
-    },
-  });
-
-  const checkOutMutation = useMutation({
-    mutationFn: async (attendanceId: string) => {
-      const now = format(new Date(), 'HH:mm:ss');
-
-      const { error } = await supabase
-        .from('attendance')
-        .update({ check_out_time: now })
-        .eq('id', attendanceId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['attendance'] });
-      toast({ title: 'Checked out successfully' });
-    },
-    onError: () => {
-      toast({ title: 'Failed to check out', variant: 'destructive' });
-    },
-  });
-
-  const todayAttendance = attendance?.find(
-    (a) => a.date === format(new Date(), 'yyyy-MM-dd')
-  );
+  const handleCheckOut = () => {
+    const now = format(new Date(), 'HH:mm:ss');
+    toast({ title: 'Checked out successfully', description: `Check-out time: ${now}` });
+  };
 
   return (
     <Layout>
@@ -105,36 +43,21 @@ export default function EmployeeAttendance() {
               <CardDescription>Mark your check-in and check-out</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {!todayAttendance ? (
-                <Button
-                  onClick={() => checkInMutation.mutate()}
-                  disabled={checkInMutation.isPending}
-                  className="w-full"
-                >
+              {!checkedIn ? (
+                <Button onClick={handleCheckIn} className="w-full">
                   <Clock className="mr-2 h-4 w-4" />
                   Check In
                 </Button>
               ) : (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-sm">
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    <span>Checked in at {todayAttendance.check_in_time}</span>
+                    <CheckCircle2 className="h-5 w-5 text-success" />
+                    <span>Checked in at {checkInTime}</span>
                   </div>
-                  {!todayAttendance.check_out_time ? (
-                    <Button
-                      onClick={() => checkOutMutation.mutate(todayAttendance.id)}
-                      disabled={checkOutMutation.isPending}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      <Clock className="mr-2 h-4 w-4" />
-                      Check Out
-                    </Button>
-                  ) : (
-                    <div className="text-sm text-muted-foreground">
-                      Checked out at {todayAttendance.check_out_time}
-                    </div>
-                  )}
+                  <Button onClick={handleCheckOut} variant="outline" className="w-full">
+                    <Clock className="mr-2 h-4 w-4" />
+                    Check Out
+                  </Button>
                 </div>
               )}
             </CardContent>
@@ -163,7 +86,7 @@ export default function EmployeeAttendance() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {attendance?.map((record) => (
+              {attendance.map((record) => (
                 <div
                   key={record.id}
                   className="flex items-center justify-between border-b pb-4 last:border-0"

@@ -1,32 +1,29 @@
+// Landing Page - Redirect to appropriate dashboard or auth
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2 } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 
-const Index = () => {
-  const { user, userRole, loading } = useAuth();
+export default function Index() {
+  const { user, userRole } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        navigate('/auth');
-      } else if (userRole === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/employee');
-      }
+    if (user && userRole) {
+      navigate(userRole === 'admin' ? '/admin' : '/employee');
+    } else {
+      navigate('/auth');
     }
-  }, [user, userRole, loading, navigate]);
+  }, [user, userRole, navigate]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-16 w-16 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-xl animate-pulse">
+          <Building2 className="h-8 w-8 text-white" />
+        </div>
         <p className="text-muted-foreground">Loading...</p>
       </div>
     </div>
   );
-};
-
-export default Index;
+}

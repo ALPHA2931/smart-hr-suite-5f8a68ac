@@ -1,42 +1,27 @@
-import { useEffect, useState } from 'react';
-import { Layout } from '@/components/Layout';
+// Employees Management - Prototype with Mock Data
+import { useState } from 'react';
+import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { supabase } from '@/integrations/supabase/client';
-import { Plus, Search, Mail, Phone, Calendar, DollarSign } from 'lucide-react';
+import { mockEmployees } from '@/data/mock';
+import { Plus, Search, Mail, Calendar, DollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Employees() {
-  const [employees, setEmployees] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
-
-  const fetchEmployees = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('employees')
-        .select('*, profiles(*), departments(*)')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setEmployees(data || []);
-    } catch (error) {
-      console.error('Error fetching employees:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredEmployees = employees.filter((emp) =>
+  const filteredEmployees = mockEmployees.filter((emp) =>
     emp.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.employee_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.position?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleAddEmployee = () => {
+    toast({ title: 'Prototype Demo', description: 'Add employee form would open here.' });
+  };
 
   return (
     <Layout>
@@ -46,7 +31,7 @@ export default function Employees() {
             <h1 className="text-4xl font-bold tracking-tight">Employees</h1>
             <p className="text-muted-foreground mt-2">Manage your workforce</p>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={handleAddEmployee}>
             <Plus className="h-4 w-4" />
             Add Employee
           </Button>
@@ -69,11 +54,7 @@ export default function Employees() {
 
         {/* Employee List */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {loading ? (
-            <div className="col-span-full text-center py-12 text-muted-foreground">
-              Loading employees...
-            </div>
-          ) : filteredEmployees.length === 0 ? (
+          {filteredEmployees.length === 0 ? (
             <div className="col-span-full text-center py-12 text-muted-foreground">
               {searchTerm ? 'No employees found matching your search.' : 'No employees yet.'}
             </div>

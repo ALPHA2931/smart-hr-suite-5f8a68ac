@@ -1,59 +1,25 @@
-import { useEffect, useState } from 'react';
-import { Layout } from '@/components/Layout';
+// Leave Requests Management - Prototype with Mock Data
+import { useState } from 'react';
+import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { FileText, Check, X, Clock } from 'lucide-react';
+import { mockLeaveRequests, MockLeaveRequest } from '@/data/mock';
+import { FileText, Check, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LeaveRequests() {
-  const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [leaveRequests, setLeaveRequests] = useState<MockLeaveRequest[]>(mockLeaveRequests);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchLeaveRequests();
-  }, []);
-
-  const fetchLeaveRequests = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('leave_requests')
-        .select('*, employees(employee_id, position, profiles(full_name))')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setLeaveRequests(data || []);
-    } catch (error) {
-      console.error('Error fetching leave requests:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateLeaveStatus = async (id: string, status: 'approved' | 'rejected') => {
-    try {
-      const { error } = await supabase
-        .from('leave_requests')
-        .update({ status })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Success',
-        description: `Leave request ${status} successfully`,
-      });
-
-      fetchLeaveRequests();
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
+  const updateLeaveStatus = (id: string, status: 'approved' | 'rejected') => {
+    setLeaveRequests(prev =>
+      prev.map(req => (req.id === id ? { ...req, status } : req))
+    );
+    toast({
+      title: 'Success',
+      description: `Leave request ${status} successfully`,
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -81,13 +47,7 @@ export default function LeaveRequests() {
         </div>
 
         <div className="grid gap-6">
-          {loading ? (
-            <Card>
-              <CardContent className="pt-6 text-center text-muted-foreground">
-                Loading leave requests...
-              </CardContent>
-            </Card>
-          ) : leaveRequests.length === 0 ? (
+          {leaveRequests.length === 0 ? (
             <Card>
               <CardContent className="pt-6 text-center text-muted-foreground">
                 No leave requests yet.
@@ -118,7 +78,7 @@ export default function LeaveRequests() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">Leave Type</p>
-                      <p className="font-medium">{request.leave_type}</p>
+                      <p className="font-medium capitalize">{request.leave_type}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Duration</p>

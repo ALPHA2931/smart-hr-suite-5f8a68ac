@@ -1,62 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Layout } from '@/components/Layout';
+// Admin Dashboard - Prototype with Mock Data
+import { Layout } from '@/components/layout/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
+import { mockAdminStats } from '@/data/mock';
 import { Users, Calendar, FileText, DollarSign, TrendingUp, Clock } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({
-    totalEmployees: 0,
-    presentToday: 0,
-    pendingLeaves: 0,
-    totalSalary: 0,
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchDashboardStats();
-  }, []);
-
-  const fetchDashboardStats = async () => {
-    try {
-      // Get total employees
-      const { count: employeeCount } = await supabase
-        .from('employees')
-        .select('*', { count: 'exact', head: true });
-
-      // Get today's attendance
-      const today = new Date().toISOString().split('T')[0];
-      const { count: presentCount } = await supabase
-        .from('attendance')
-        .select('*', { count: 'exact', head: true })
-        .eq('date', today)
-        .eq('status', 'present');
-
-      // Get pending leave requests
-      const { count: pendingLeaveCount } = await supabase
-        .from('leave_requests')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
-
-      // Get total salary
-      const { data: salaryData } = await supabase
-        .from('employees')
-        .select('salary');
-      
-      const totalSalary = salaryData?.reduce((sum, emp) => sum + Number(emp.salary), 0) || 0;
-
-      setStats({
-        totalEmployees: employeeCount || 0,
-        presentToday: presentCount || 0,
-        pendingLeaves: pendingLeaveCount || 0,
-        totalSalary,
-      });
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const stats = mockAdminStats;
 
   const statCards = [
     {
@@ -121,12 +70,8 @@ export default function AdminDashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">
-                  {loading ? '...' : stat.value}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {stat.description}
-                </p>
+                <div className="text-3xl font-bold">{stat.value}</div>
+                <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
               </CardContent>
             </Card>
           ))}
