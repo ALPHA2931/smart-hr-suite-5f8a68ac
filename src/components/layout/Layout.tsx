@@ -1,4 +1,4 @@
-// Layout Component - Main app layout with sidebar navigation
+// Layout Component - Enhanced main app layout with sidebar navigation
 import { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +11,8 @@ import {
   DollarSign,
   LayoutDashboard,
   LogOut,
+  ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -36,46 +38,62 @@ export function Layout({ children }: LayoutProps) {
       ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-sidebar border-r border-sidebar-border shadow-lg">
+      <aside className="fixed inset-y-0 left-0 z-50 w-72 bg-sidebar border-r border-sidebar-border shadow-2xl">
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-20 items-center gap-3 px-6 border-b border-sidebar-border/50">
-            <div className="h-11 w-11 rounded-xl bg-gradient-primary flex items-center justify-center shadow-lg">
-              <Building2 className="h-6 w-6 text-white" />
+          <div className="flex h-24 items-center gap-4 px-6 border-b border-sidebar-border/30 bg-sidebar-accent/30">
+            <div className="relative">
+              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center shadow-xl">
+                <Building2 className="h-7 w-7 text-primary-foreground" />
+              </div>
+              <div className="absolute -top-1 -right-1 h-5 w-5 bg-success rounded-full flex items-center justify-center">
+                <Sparkles className="h-3 w-3 text-success-foreground" />
+              </div>
             </div>
             <div>
-              <h1 className="text-lg font-bold text-sidebar-foreground">HR System</h1>
-              <p className="text-xs text-sidebar-foreground/60 capitalize font-medium">{userRole} • Prototype</p>
+              <h1 className="text-xl font-bold text-sidebar-foreground tracking-tight">HR System</h1>
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 bg-success rounded-full animate-pulse" />
+                <p className="text-xs text-sidebar-foreground/60 capitalize font-semibold">{userRole} Panel</p>
+              </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 space-y-1 px-3 py-6">
+          <nav className="flex-1 space-y-2 px-4 py-6 overflow-y-auto">
+            <p className="text-xs font-bold text-sidebar-foreground/40 uppercase tracking-wider px-4 mb-4">Navigation</p>
             {navigation.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.href}
                 className={({ isActive }) =>
-                  `group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                  `group flex items-center justify-between rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-300 ${
                     isActive
-                      ? 'bg-gradient-primary text-white shadow-lg scale-[1.02]'
-                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground hover:scale-[1.02]'
+                      ? 'bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-lg shadow-primary/25'
+                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
                   }`
                 }
               >
-                <item.icon className="h-5 w-5" />
-                <span>{item.name}</span>
+                <div className="flex items-center gap-3">
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.name}</span>
+                </div>
+                <ChevronRight className="h-4 w-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
               </NavLink>
             ))}
           </nav>
 
-          {/* Sign Out */}
-          <div className="border-t border-sidebar-border/50 p-4">
+          {/* Footer */}
+          <div className="border-t border-sidebar-border/30 p-4 bg-sidebar-accent/20">
+            <div className="px-4 py-3 bg-sidebar-accent/50 rounded-xl mb-4">
+              <p className="text-xs text-sidebar-foreground/60 mb-1">Logged in as</p>
+              <p className="text-sm font-semibold text-sidebar-foreground capitalize">{userRole} User</p>
+            </div>
             <Button
               variant="ghost"
-              className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground rounded-xl h-11 transition-all duration-200"
+              className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive rounded-xl h-12 transition-all duration-200"
               onClick={signOut}
             >
               <LogOut className="h-5 w-5" />
@@ -86,9 +104,11 @@ export function Layout({ children }: LayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <main className="pl-64">
-        <div className="container mx-auto p-8 max-w-7xl">
-          {children}
+      <main className="pl-72">
+        <div className="min-h-screen">
+          <div className="container mx-auto p-8 max-w-7xl animate-fade-in">
+            {children}
+          </div>
         </div>
       </main>
     </div>

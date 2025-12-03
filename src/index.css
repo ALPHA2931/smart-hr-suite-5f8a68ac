@@ -71,6 +71,14 @@ All colors MUST be HSL.
     --chart-4: 142 76% 36%;
     --chart-5: 0 84% 60%;
 
+    /* Status Colors */
+    --status-present: 142 76% 36%;
+    --status-absent: 0 84% 60%;
+    --status-late: 38 92% 50%;
+    --status-approved: 142 76% 36%;
+    --status-pending: 38 92% 50%;
+    --status-rejected: 0 84% 60%;
+
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 hsl(220 20% 15% / 0.05);
     --shadow: 0 4px 6px -1px hsl(220 20% 15% / 0.1);
@@ -127,6 +135,14 @@ All colors MUST be HSL.
     --chart-3: 38 92% 60%;
     --chart-4: 142 70% 45%;
     --chart-5: 0 84% 65%;
+
+    /* Status Colors - Dark Mode */
+    --status-present: 142 70% 45%;
+    --status-absent: 0 84% 65%;
+    --status-late: 38 92% 60%;
+    --status-approved: 142 70% 45%;
+    --status-pending: 38 92% 60%;
+    --status-rejected: 0 84% 65%;
   }
 }
 
